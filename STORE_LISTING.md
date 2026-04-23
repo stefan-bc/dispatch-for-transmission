@@ -25,24 +25,26 @@ This is a third-party extension. It is not affiliated with, endorsed by,
 or an official product of The Transmission Project. The name
 "Transmission" describes compatibility only.
 
-WHY TORRENTER
-• Dark, restrained interface designed for density, not decoration.
-• Add torrents by magnet link, .torrent URL, or file upload.
-• Start, pause, remove, and bulk-action your torrents with a click or
-  a keyboard shortcut.
+WHY THIS EXTENSION
+• Dark, restrained Dracula interface designed for density, not decoration.
+• Add torrents by magnet link, .torrent URL, file upload, or drag-and-drop.
+• Start, pause, remove, and bulk-action your torrents with a click,
+  a keyboard shortcut, or the right-click menu.
 • Live progress bars, per-torrent download / upload rates, peer counts,
   ETA, and share ratio.
-• Search and filter by state (active / downloading / seeding / stopped
-  / error).
+• Search across torrents by name.
 • Right-click any magnet link or .torrent URL on a page to add it
   directly to a chosen server — with optional download-directory
   shortcuts (e.g. "Movies", "TV", "Software").
+• Toolbar badge shows how many torrents have finished (toggle in
+  settings).
 • File manager: pick which files inside a torrent you want before it
   starts downloading.
 • Multi-server: connect to as many Transmission instances as you like
   and switch between them with one click.
-• Keyboard-first: O to add, R/P to start/stop, Del to remove, S or /
-  to search, arrows to navigate, Enter to open the file list.
+• Keyboard-first: O to add, Space to pause/resume, Del to remove,
+  S or / to search, arrows to navigate, Enter to open the file list,
+  Cmd/Ctrl+Shift+P to open the popup from anywhere.
 
 WHAT IT IS NOT
 • Not a torrent client itself — it needs a Transmission daemon running
@@ -75,6 +77,7 @@ Paste one-liners into the dashboard's "justification" fields.
 | `notifications` | Show a brief desktop notification confirming a torrent was added, or surfacing a connection/auth error from the server. |
 | `scripting` | Needed by the right-click handler to fetch the target `.torrent` file from the current page context (so site cookies / auth cookies apply) before forwarding its bytes to Transmission. |
 | `activeTab` | Access the current tab only at the moment of a user click on the context-menu entry, to read the link the user right-clicked. |
+| `alarms` | Background poll (once every 30 seconds) so the toolbar-icon badge stays up to date when the popup is closed. |
 | `optional_host_permissions` (`http://*/*`, `https://*/*`) | Make JSON-RPC calls to the exact Transmission server URL the user configures. Requested at runtime, per-host, only after the user clicks "Test connection" or "Save" — the extension is never granted the full web up-front. |
 
 ## Single purpose statement

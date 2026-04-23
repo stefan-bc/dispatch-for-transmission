@@ -37,23 +37,36 @@ for the URL's origin.
 | Key | Action |
 |---|---|
 | `O` | Add torrent |
-| `R` / `P` | Start / pause selected |
-| `Del` / `⌫` | Delete selected |
+| `Space` | Start / pause selected (toggles) |
+| `Del` / `⌫` | Delete selected (Enter confirms) |
 | `S` or `/` | Focus search |
 | `↑` `↓` / `J` `K` | Move selection (hold `Shift` to extend) |
 | `Cmd/Ctrl`+`A` | Select all visible |
 | `Enter` | Open file picker for focused torrent |
 | `Esc` | Close dialog / clear search |
+| `Cmd/Ctrl`+`Shift`+`P` | Open / close the popup (global) |
 
-## Right-click on magnet links
+## Right-click menus
 
-Any magnet link or `.torrent` URL on a page gets a right-click menu entry
-for each configured server. If you added download directories to a server,
-they appear as sub-entries.
+- **On a page, on any magnet link or `.torrent` URL** — "Add torrent to
+  &lt;server&gt;" entry per configured server. Download-directory
+  shortcuts appear as sub-entries.
+- **On a torrent row in the popup** — Resume, Pause, Remove, Show files,
+  plus Add / Start all / Stop all.
+- **On empty space in the popup** — Add torrent, Start all, Stop all.
+
+## Drag and drop
+
+Drop a `.torrent` file anywhere on the popup to add it to the active server.
+
+## Toolbar badge
+
+The extension icon shows a count of fully-downloaded torrents for the
+last-used server. Toggle it off in the settings dialog.
 
 ## Notes
 
-- Dark-mode only (DaisyUI "dim" theme). The extension is MV3 and uses
+- Dracula dark theme via DaisyUI v5. The extension is MV3 and uses
   `optional_host_permissions`, so Chrome only asks for access to servers
   you actually add.
 - Passwords are stored in `chrome.storage.local` (not synced).

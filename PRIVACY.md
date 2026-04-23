@@ -21,7 +21,8 @@ The extension stores and processes the following, **only** on your device:
 - **Torrent data** received from your own Transmission server — names,
   sizes, progress, peers, file lists. This data is only held in memory
   for the duration of the popup / tab session.
-- **User preferences** — sort order, refresh interval, size units, etc.
+- **User preferences** — sort order, refresh interval, toolbar-badge
+  toggle, and the like.
 
 ## Where the data goes
 
@@ -61,6 +62,7 @@ solely for the purpose listed:
 | `notifications` | Show a desktop notification when a torrent is added or fails. |
 | `scripting` | Fetch `.torrent` files from the current page using your existing site cookies when you right-click a link. |
 | `activeTab` | Access the current tab only when you right-click, to forward the link/URL. |
+| `alarms` | Run a short background poll (once every 30 seconds) so the toolbar-icon badge stays current when the popup is closed. |
 | `optional_host_permissions: http(s)://*/*` | Contact the RPC endpoint(s) you configure. Requested **only** for the host you add, and only at the moment you click "Test connection" or "Save" in settings. |
 
 The extension does **not** request broad host permissions up-front — it
