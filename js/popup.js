@@ -6,6 +6,8 @@ import {
   RpcError,
   loadServers,
   loadServer,
+  saveServer,
+  deleteServer,
   loadPreferences,
   savePreferences,
   STATUS,
@@ -52,13 +54,14 @@ async function init() {
   wireShortcuts();
   wireRowMenu();
   wireDragDrop();
+  wireServers();
   hydrateServerSelects();
 
   if (state.servers.length === 0) {
     renderEmptyState({
       title: "No server configured",
       body: "Add a Transmission server to get started.",
-      action: { label: "Open settings", fn: () => chrome.runtime.openOptionsPage() }
+      action: { label: "Add server", fn: () => openServersDialog() }
     });
     return;
   }
@@ -89,6 +92,7 @@ function wireToolbar() {
   document.getElementById("btn-start").addEventListener("click", () => bulkAction("start"));
   document.getElementById("btn-stop").addEventListener("click", () => bulkAction("stop"));
   document.getElementById("btn-delete").addEventListener("click", openDeleteDialog);
+  document.getElementById("btn-servers").addEventListener("click", openServersDialog);
   document.getElementById("btn-settings").addEventListener("click", openSettingsDialog);
   document.getElementById("btn-expand").addEventListener("click", () => {
     chrome.tabs.create({ url: chrome.runtime.getURL("popup.html?view=tab") });
@@ -195,7 +199,7 @@ async function refresh() {
         body: err.code === 2
           ? "Check username and password in settings."
           : "The Transmission daemon didn't respond. Check the server URL and ensure remote access is enabled.",
-        action: { label: "Open settings", fn: () => chrome.runtime.openOptionsPage() }
+        action: { label: "Edit server", fn: () => openServersDialog() }
       });
     } else {
       toast(err.message || "Unexpected error", "error");
@@ -326,23 +330,11 @@ function updateRow(row, t) {
   row.querySelector(".rate-down").textContent = formatRate(t.rateDownload);
   row.querySelector(".rate-up").textContent = formatRate(t.rateUpload);
 
-  // Per-row remove button. Primary use-case: prune completed torrents
-  // one click at a time. Clicking the button replaces the current
-  // selection with just this torrent and opens the delete-confirm dialog.
-  const removeBtn = row.querySelector(".row-remove");
-
   // Re-wire events (cheap; rows are small).
   row.onclick = (e) => onRowClick(e, t.id);
   row.ondblclick = () => openFilesDialog(t.id);
   row.onkeydown = (e) => onRowKey(e, t.id);
   row.oncontextmenu = (e) => openRowMenu(e, t.id);
-  removeBtn.onclick = (e) => {
-    e.stopPropagation();
-    state.selection.clear();
-    state.selection.add(t.id);
-    renderList();
-    openDeleteDialog();
-  };
 }
 
 function deriveStateKey(t) {
@@ -433,7 +425,15 @@ function updateStatusBar() {
   if (state.selection.size > 0) {
     mid.textContent = `${state.selection.size} selected`;
   } else {
-    mid.innerHTML = '<a href="https://buymeacoffee.com/stefanvca" target="_blank" rel="noopener" class="link link-hover opacity-70" title="Buy me a coffee">☕</a>';
+    // Line-drawn coffee mug, matches the rest of the toolbar glyphs.
+    mid.innerHTML = '<a href="https://buymeacoffee.com/stefanvca" target="_blank" rel="noopener" class="link link-hover opacity-70 inline-flex items-center" title="Buy me a coffee" aria-label="Buy me a coffee">'
+      + '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+      + '<path d="M17 8h1a4 4 0 0 1 0 8h-1"/>'
+      + '<path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/>'
+      + '<line x1="6" y1="2" x2="6" y2="4"/>'
+      + '<line x1="10" y1="2" x2="10" y2="4"/>'
+      + '<line x1="14" y1="2" x2="14" y2="4"/>'
+      + '</svg></a>';
   }
 }
 
@@ -505,6 +505,7 @@ function wireRowMenu() {
     else if (action === "add") openAddDialog();
     else if (action === "start-all") bulkActionAll("start");
     else if (action === "stop-all") bulkActionAll("stop");
+    else if (action === "edit-servers") openServersDialog();
   });
 
   // List-menu clicks (empty area / background).
@@ -516,6 +517,7 @@ function wireRowMenu() {
     if (action === "add") openAddDialog();
     else if (action === "start-all") bulkActionAll("start");
     else if (action === "stop-all") bulkActionAll("stop");
+    else if (action === "edit-servers") openServersDialog();
   });
 
   // Intercept right-click anywhere in the popup: if not on a row, show
@@ -594,6 +596,183 @@ function openRowMenu(e, id) {
 function closeRowMenu() {
   document.getElementById("row-menu").hidden = true;
   document.getElementById("list-menu").hidden = true;
+}
+
+// --- Server manager (dialog-based, mirrors options.html) --------------
+
+function wireServers() {
+  document.getElementById("btn-add-server").addEventListener("click", () => openServerEditor(null));
+  document.getElementById("btn-save").addEventListener("click", onServerSave);
+  document.getElementById("btn-test").addEventListener("click", onServerTest);
+  document.getElementById("btn-add-dir").addEventListener("click", () => addDirRow());
+  document.getElementById("s-auth").addEventListener("change", (e) => {
+    document.getElementById("s-auth-fields").hidden = !e.target.checked;
+  });
+}
+
+async function openServersDialog() {
+  state.servers = await loadServers();
+  renderServerList();
+  document.getElementById("dlg-servers").showModal();
+}
+
+function renderServerList() {
+  const list = document.getElementById("server-list");
+  const tpl = document.getElementById("server-row-tp");
+  list.innerHTML = "";
+  if (state.servers.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "px-2 py-4 text-center text-xs opacity-60";
+    empty.textContent = "No servers yet — click 'Add server'.";
+    list.append(empty);
+    return;
+  }
+  for (const s of state.servers) {
+    const row = tpl.content.firstElementChild.cloneNode(true);
+    row.querySelector(".server-name").textContent = s.name;
+    row.querySelector(".server-url").textContent = s.rpc;
+    row.querySelector(".server-edit").onclick = () => openServerEditor(s);
+    row.querySelector(".server-delete").onclick = () => confirmDeleteServer(s);
+    const dot = row.querySelector(".server-dot");
+    list.append(row);
+    pingServer(s).then(ok => {
+      dot.classList.remove("bg-base-300");
+      dot.classList.add(ok ? "bg-success" : "bg-error");
+    });
+  }
+}
+
+async function pingServer(server) {
+  try {
+    const origin = originFrom(server.rpc);
+    if (!origin) return false;
+    const granted = await chrome.permissions.contains({ origins: [origin + "/*"] });
+    if (!granted) return false;
+    const client = new RpcClient(server);
+    await client.getSession();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function originFrom(url) {
+  try { return new URL(url).origin; } catch { return null; }
+}
+
+async function confirmDeleteServer(server) {
+  if (!confirm(`Delete server "${server.name}"?`)) return;
+  await deleteServer(server.id);
+  state.servers = await loadServers();
+  renderServerList();
+  hydrateServerSelects();
+  // If the active server was deleted, flip to another (or show empty).
+  if (server.id === state.currentServerId) {
+    if (state.servers.length > 0) switchServer(state.servers[0].id);
+    else {
+      state.client = null;
+      state.torrents.clear();
+      stopRefresh();
+      renderList();
+    }
+  }
+}
+
+function openServerEditor(server) {
+  state.editingServer = server;
+  const isNew = !server;
+  document.getElementById("dlg-server-title").textContent = isNew ? "Add server" : "Edit server";
+  document.getElementById("s-name").value = server?.name || "";
+  document.getElementById("s-rpc").value = server?.rpc || "http://127.0.0.1:9091/transmission/rpc";
+  document.getElementById("s-webui").value = server?.webui || "";
+  document.getElementById("s-auth").checked = !!server?.authEnabled;
+  document.getElementById("s-auth-fields").hidden = !server?.authEnabled;
+  document.getElementById("s-user").value = server?.username || "";
+  document.getElementById("s-pass").value = server?.password || "";
+
+  const dirs = document.getElementById("dirs");
+  dirs.innerHTML = "";
+  if (Array.isArray(server?.downloadDirs)) {
+    for (const dir of server.downloadDirs) addDirRow(dir);
+  }
+
+  document.getElementById("s-status").hidden = true;
+  document.getElementById("dlg-server").showModal();
+  setTimeout(() => document.getElementById("s-name").focus(), 50);
+}
+
+function addDirRow(dir = { name: "", path: "" }) {
+  const tpl = document.getElementById("dir-tp");
+  const el = tpl.content.firstElementChild.cloneNode(true);
+  el.querySelector(".dir-name").value = dir.name;
+  el.querySelector(".dir-path").value = dir.path;
+  el.querySelector(".dir-remove").onclick = () => el.remove();
+  document.getElementById("dirs").append(el);
+}
+
+function collectServerForm() {
+  const downloadDirs = Array.from(document.querySelectorAll("#dirs .dir-row"))
+    .map(row => ({
+      name: row.querySelector(".dir-name").value.trim(),
+      path: row.querySelector(".dir-path").value.trim()
+    }))
+    .filter(d => d.name && d.path);
+  return {
+    name: document.getElementById("s-name").value.trim(),
+    rpc: document.getElementById("s-rpc").value.trim(),
+    webui: document.getElementById("s-webui").value.trim(),
+    authEnabled: document.getElementById("s-auth").checked,
+    username: document.getElementById("s-user").value,
+    password: document.getElementById("s-pass").value,
+    downloadDirs
+  };
+}
+
+function setServerStatus(message, ok) {
+  const el = document.getElementById("s-status");
+  el.textContent = message;
+  el.className = "alert alert-soft py-2 text-xs " + (ok ? "alert-success" : "alert-error");
+  el.hidden = false;
+}
+
+async function onServerTest() {
+  const data = collectServerForm();
+  if (!data.name || !data.rpc) return setServerStatus("Name and RPC URL are required.", false);
+  const origin = originFrom(data.rpc);
+  if (!origin) return setServerStatus("Invalid RPC URL.", false);
+  const granted = await chrome.permissions.request({ origins: [origin + "/*"] });
+  if (!granted) return setServerStatus("Permission denied. Cannot reach server without it.", false);
+  try {
+    const client = new RpcClient({ ...data, id: state.editingServer?.id || "probe" });
+    const session = await client.getSession();
+    setServerStatus(`Connected (Transmission ${session?.version || ""})`, true);
+  } catch (err) {
+    setServerStatus((err instanceof RpcError ? "RPC error: " : "Error: ") + (err.message || err), false);
+  }
+}
+
+async function onServerSave() {
+  const data = collectServerForm();
+  if (!data.name || !data.rpc) return setServerStatus("Name and RPC URL are required.", false);
+  const origin = originFrom(data.rpc);
+  if (!origin) return setServerStatus("Invalid RPC URL.", false);
+  const granted = await chrome.permissions.request({ origins: [origin + "/*"] });
+  if (!granted) return setServerStatus("Permission denied. Cannot reach server without it.", false);
+
+  const server = {
+    id: state.editingServer?.id || crypto.randomUUID(),
+    enabled: true,
+    ...data
+  };
+  await saveServer(server);
+  state.servers = await loadServers();
+  renderServerList();
+  hydrateServerSelects();
+  // Keep the popup's active server in sync with the dropdown.
+  document.getElementById("server-select").value = state.currentServerId || server.id;
+  if (!state.currentServerId) switchServer(server.id);
+  document.getElementById("dlg-server").close();
+  toast(`Saved "${server.name}"`, "success");
 }
 
 // --- Drag-and-drop .torrent files --------------------------------------
@@ -713,14 +892,16 @@ function wireDialogs() {
   document.getElementById("files-submit").addEventListener("click", submitFiles);
   document.getElementById("open-options").addEventListener("click", (e) => {
     e.preventDefault();
-    chrome.runtime.openOptionsPage();
+    // Close the settings dialog first so the servers dialog opens cleanly.
+    document.getElementById("dlg-settings").close();
+    openServersDialog();
   });
   document.getElementById("empty-action").addEventListener("click", () => {});
 }
 
 function openAddDialog() {
   if (state.servers.length === 0) {
-    chrome.runtime.openOptionsPage();
+    openServersDialog();
     return;
   }
   const dlg = document.getElementById("dlg-add");

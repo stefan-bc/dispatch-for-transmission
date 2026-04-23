@@ -182,8 +182,8 @@ chrome.storage.onChanged.addListener((changes, area) => {
 // nudged by the popup after each normal refresh so it stays responsive.
 
 const BADGE_ALARM = "badge-poll";
-const BADGE_BG = "#50fa7b";      // Dracula green
-const BADGE_FG = "#282a36";      // Dracula background — readable on green
+const BADGE_BG = "#22c55e";      // DaisyUI success green — high contrast on black theme
+const BADGE_FG = "#000000";      // pure black — readable on the green badge
 
 async function updateBadge() {
   try {

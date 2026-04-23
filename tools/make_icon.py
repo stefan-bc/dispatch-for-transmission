@@ -9,9 +9,10 @@ import zlib
 
 SIZE = 128
 
-# Dracula palette (https://draculatheme.com).
-BG       = (40, 42, 54, 255)    # #282a36 background
-HIGHLIGHT = (98, 114, 164, 255) # #6272a4 subtle top inner edge
+# DaisyUI "black" theme palette — pure black with a cool cyan accent for
+# the download glyph so the icon stays legible at toolbar sizes.
+BG       = (0, 0, 0, 255)       # #000000 background
+HIGHLIGHT = (38, 38, 38, 255)   # #262626 subtle top inner edge
 ACCENT   = (139, 233, 253, 255) # #8be9fd cyan glyph
 TRANSPARENT = (0, 0, 0, 0)
 

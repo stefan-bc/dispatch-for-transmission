@@ -9,7 +9,7 @@
 @source "../js/**/*.js";
 
 @plugin "daisyui" {
-  themes: dracula --default, dim;
+  themes: black --default;
   logs: false;
 }
 
