@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dracula">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Transmission Remote settings</title>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/overrides.css">
+</head>
+<body class="bg-base-200 min-h-screen text-base-content">
+  <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+
+    <header>
+      <h1 class="text-xl font-semibold">Transmission Remote</h1>
+      <p class="text-sm opacity-70">Configure one or more Transmission servers.</p>
+    </header>
+
+    <!-- First-install welcome (only visible with ?from=install) -->
+    <section id="welcome" class="card card-sm bg-primary/10 border border-primary/30" hidden>
+      <div class="card-body">
+        <h2 class="card-title text-sm">Welcome</h2>
+        <ol class="list-decimal pl-5 text-sm space-y-1 opacity-90">
+          <li>In Transmission, enable remote access: <kbd class="kbd kbd-xs">Preferences</kbd> → <kbd class="kbd kbd-xs">Remote</kbd>.</li>
+          <li>Pin this extension to the browser toolbar so the icon stays visible.</li>
+          <li>Add your first server below. The URL is usually <code class="px-1 rounded bg-base-100 text-xs">http://host:9091/transmission/rpc</code>.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Servers list -->
+    <section class="card card-sm bg-base-100 border border-base-300">
+      <div class="card-body p-0">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
+          <h2 class="text-sm font-semibold">Servers</h2>
+          <button id="btn-add-server" class="btn btn-sm btn-primary">Add server</button>
+        </div>
+        <ul id="server-list" class="list"></ul>
+      </div>
+    </section>
+
+    <footer class="text-center text-xs opacity-60 pt-2 pb-6 space-y-2">
+      <p>Credentials stay in local browser storage. No external services are contacted.</p>
+      <p>
+        <a href="https://buymeacoffee.com/stefanvca" target="_blank" rel="noopener" class="link link-hover">
+          ☕ Buy me a coffee
+        </a>
+      </p>
+    </footer>
+  </main>
+
+  <!-- Server editor -->
+  <dialog id="dlg-server" class="modal">
+    <div class="modal-box w-[28rem] max-w-[92vw] p-0">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
+        <h3 id="dlg-server-title" class="font-semibold text-sm">Add server</h3>
+        <button class="btn btn-ghost btn-xs btn-square" data-close="dlg-server" aria-label="Close">✕</button>
+      </div>
+      <form id="server-form" class="px-4 py-3 space-y-3 text-sm max-h-[70vh] overflow-y-auto">
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend pb-1">Name</legend>
+          <input id="s-name" type="text" required autocomplete="off" spellcheck="false" class="input input-sm w-full" placeholder="Seedbox">
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend pb-1">RPC URL</legend>
+          <input id="s-rpc" type="url" required autocomplete="off" spellcheck="false" class="input input-sm w-full" placeholder="http://host:9091/transmission/rpc">
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend pb-1">Web UI URL <span class="opacity-60">(optional)</span></legend>
+          <input id="s-webui" type="url" autocomplete="off" spellcheck="false" class="input input-sm w-full" placeholder="http://host:9091/transmission/web/">
+        </fieldset>
+        <label class="label cursor-pointer justify-start gap-2">
+          <input id="s-auth" type="checkbox" class="checkbox checkbox-xs">
+          <span class="label-text text-sm">Require authentication</span>
+        </label>
+        <div id="s-auth-fields" class="space-y-3 pl-6" hidden>
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend pb-1">Username</legend>
+            <input id="s-user" type="text" autocomplete="off" spellcheck="false" class="input input-sm w-full">
+          </fieldset>
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend pb-1">Password</legend>
+            <input id="s-pass" type="password" autocomplete="new-password" class="input input-sm w-full">
+          </fieldset>
+        </div>
+
+        <fieldset class="fieldset border border-base-300 rounded-md px-3 py-2">
+          <legend class="fieldset-legend text-xs">Download directories <span class="opacity-60">(for right-click menu)</span></legend>
+          <div id="dirs" class="space-y-1.5 mt-1"></div>
+          <button id="btn-add-dir" type="button" class="btn btn-xs btn-ghost mt-2">+ Add directory</button>
+        </fieldset>
+
+        <div id="s-status" class="alert py-2 text-xs" hidden></div>
+      </form>
+      <div class="flex justify-end gap-2 px-4 py-3 border-t border-base-300">
+        <button id="btn-test" class="btn btn-sm btn-ghost">Test connection</button>
+        <button class="btn btn-sm btn-ghost" data-close="dlg-server">Cancel</button>
+        <button id="btn-save" class="btn btn-sm btn-primary">Save</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
+
+  <!-- Directory row template -->
+  <template id="dir-tp">
+    <div class="dir-row grid grid-cols-[1fr_2fr_auto] gap-2 items-center">
+      <input class="dir-name input input-xs" type="text" placeholder="Movies" autocomplete="off" spellcheck="false">
+      <input class="dir-path input input-xs" type="text" placeholder="/downloads/movies" autocomplete="off" spellcheck="false">
+      <button class="dir-remove btn btn-ghost btn-xs btn-square hover:text-error" type="button" title="Remove" aria-label="Remove">
+        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+    </div>
+  </template>
+
+  <!-- Server row template -->
+  <template id="server-row-tp">
+    <li class="list-row items-center gap-3 px-4 py-3">
+      <span class="server-dot inline-block size-2 rounded-full bg-base-300"></span>
+      <div class="min-w-0 flex-1">
+        <div class="server-name text-sm font-medium truncate"></div>
+        <div class="server-url text-xs opacity-60 truncate font-mono"></div>
+      </div>
+      <button class="server-edit btn btn-ghost btn-xs btn-square" title="Edit" aria-label="Edit">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 3l7 7-11 11H3v-7z"/></svg>
+      </button>
+      <button class="server-delete btn btn-ghost btn-xs btn-square hover:text-error" title="Delete" aria-label="Delete">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+    </li>
+  </template>
+
+  <div id="toasts" class="toast toast-bottom toast-center z-50" aria-live="polite"></div>
+
+  <script type="module" src="js/options.js"></script>
+</body>
+</html>

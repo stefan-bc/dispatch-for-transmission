@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!-- Dev-only preview. Not shipped. Renders the popup with sample data
+     so we can screenshot the styled list without needing a live RPC. -->
+<html lang="en" data-theme="dracula">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/overrides.css">
+</head>
+<body class="grid grid-rows-[auto_1fr_auto] w-[560px] h-[560px] overflow-hidden bg-base-200 text-base-content">
+
+  <div class="navbar min-h-0 px-2 py-1.5 gap-1.5 bg-base-100 border-b border-base-300">
+    <select class="select select-xs select-ghost w-auto max-w-36 font-medium">
+      <option>Seedbox</option>
+    </select>
+    <select class="select select-xs select-ghost w-auto max-w-28">
+      <option>All</option>
+    </select>
+    <label class="input input-xs input-ghost flex-1 min-w-0">
+      <svg class="h-3 w-3 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" placeholder="Search" class="grow">
+    </label>
+    <div class="flex items-center gap-0.5 ml-auto">
+      <button class="btn btn-ghost btn-xs btn-square">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-xs btn-square">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-xs btn-square">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-xs btn-square hover:text-error">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+      <span class="w-px h-4 bg-base-300 mx-1"></span>
+      <button class="btn btn-ghost btn-xs btn-square">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-xs btn-square">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3h7v7M21 3l-9 9M5 5v14h14v-7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <ul class="list bg-base-200 overflow-y-auto overflow-x-hidden">
+    <li class="row flex items-center gap-3 py-2 pl-3 pr-2 cursor-pointer select-none hover:bg-base-300/50">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="text-sm font-medium truncate">Ubuntu.24.04.3.desktop.amd64.iso</span>
+          <span class="badge badge-xs shrink-0 badge-info badge-soft">Downloading</span>
+        </div>
+        <progress class="progress progress-xs w-full my-1 progress-info" value="42" max="100"></progress>
+        <div class="flex items-center justify-between gap-2 text-xs opacity-70 tnum">
+          <span class="truncate">2.1 GiB / 5.0 GiB (42%) • 4m 12s</span>
+          <span class="flex items-center gap-1.5 shrink-0">
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↓</span><span>11.2 MiB/s</span></span>
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↑</span><span>1.1 MiB/s</span></span>
+          </span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-xs btn-square shrink-0 hover:text-error">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+    </li>
+    <li class="row selected flex items-center gap-3 py-2 pl-3 pr-2 cursor-pointer select-none">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="text-sm font-medium truncate">Debian.12.netinst.amd64.iso</span>
+          <span class="badge badge-xs shrink-0 badge-primary badge-soft">Seeding</span>
+        </div>
+        <progress class="progress progress-xs w-full my-1 progress-primary" value="100" max="100"></progress>
+        <div class="flex items-center justify-between gap-2 text-xs opacity-70 tnum">
+          <span class="truncate">640 MiB • Ratio 2.35</span>
+          <span class="flex items-center gap-1.5 shrink-0">
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↓</span><span>0 B/s</span></span>
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↑</span><span>342 KiB/s</span></span>
+          </span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-xs btn-square shrink-0 hover:text-error">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+    </li>
+    <li class="row flex items-center gap-3 py-2 pl-3 pr-2 cursor-pointer select-none hover:bg-base-300/50">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="text-sm font-medium truncate">Archlinux-2026.03.01-x86_64.iso</span>
+          <span class="badge badge-xs shrink-0 badge-ghost">Complete</span>
+        </div>
+        <progress class="progress progress-xs w-full my-1" value="100" max="100"></progress>
+        <div class="flex items-center justify-between gap-2 text-xs opacity-70 tnum">
+          <span class="truncate">1.2 GiB • Ratio 0.12</span>
+          <span class="flex items-center gap-1.5 shrink-0">
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↓</span><span>0 B/s</span></span>
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↑</span><span>0 B/s</span></span>
+          </span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-xs btn-square shrink-0 hover:text-error">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+    </li>
+    <li class="row flex items-center gap-3 py-2 pl-3 pr-2 cursor-pointer select-none hover:bg-base-300/50">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="text-sm font-medium truncate">Fedora-Workstation-Live-42-1.6.x86_64</span>
+          <span class="badge badge-xs shrink-0 badge-warning badge-soft">Verifying</span>
+        </div>
+        <progress class="progress progress-xs w-full my-1 progress-warning" value="67" max="100"></progress>
+        <div class="flex items-center justify-between gap-2 text-xs opacity-70 tnum">
+          <span class="truncate">1.4 GiB / 2.1 GiB (67%)</span>
+          <span class="flex items-center gap-1.5 shrink-0">
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↓</span><span>0 B/s</span></span>
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↑</span><span>0 B/s</span></span>
+          </span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-xs btn-square shrink-0 hover:text-error">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+    </li>
+    <li class="row flex items-center gap-3 py-2 pl-3 pr-2 cursor-pointer select-none hover:bg-base-300/50">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="text-sm font-medium truncate">Pop!_OS 22.04 LTS (amd64) intel</span>
+          <span class="badge badge-xs shrink-0 badge-error badge-soft">Error</span>
+        </div>
+        <progress class="progress progress-xs w-full my-1 progress-error" value="28" max="100"></progress>
+        <div class="flex items-center justify-between gap-2 text-xs opacity-70 tnum">
+          <span class="truncate">650 MiB / 2.3 GiB (28%)</span>
+          <span class="flex items-center gap-1.5 shrink-0">
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↓</span><span>0 B/s</span></span>
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↑</span><span>0 B/s</span></span>
+          </span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-xs btn-square shrink-0 hover:text-error">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+    </li>
+    <li class="row flex items-center gap-3 py-2 pl-3 pr-2 cursor-pointer select-none hover:bg-base-300/50">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="text-sm font-medium truncate">Manjaro-KDE-23.1.4-stable-x86_64</span>
+          <span class="badge badge-xs shrink-0 badge-ghost">Stopped</span>
+        </div>
+        <progress class="progress progress-xs w-full my-1" value="12" max="100"></progress>
+        <div class="flex items-center justify-between gap-2 text-xs opacity-70 tnum">
+          <span class="truncate">350 MiB / 2.9 GiB (12%)</span>
+          <span class="flex items-center gap-1.5 shrink-0">
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↓</span><span>0 B/s</span></span>
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↑</span><span>0 B/s</span></span>
+          </span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-xs btn-square shrink-0 hover:text-error">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+    </li>
+  </ul>
+
+  <div class="flex items-center justify-between px-3 py-1.5 bg-base-100 border-t border-base-300 text-xs opacity-80 tnum gap-2">
+    <span>6 torrents</span>
+    <span class="truncate">1 selected</span>
+    <span class="flex items-center gap-2">
+      <span class="flex items-center gap-0.5"><span class="opacity-60">↓</span><span>11.2 MiB/s</span></span>
+      <span class="flex items-center gap-0.5"><span class="opacity-60">↑</span><span>1.4 MiB/s</span></span>
+    </span>
+  </div>
+
+</body>
+</html>

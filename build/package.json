@@ -1,0 +1,15 @@
+{
+  "name": "transmission-remote-css-build",
+  "version": "1.0.0",
+  "private": true,
+  "description": "One-shot build: compiles Tailwind v4 + DaisyUI v5 into extension CSS. The extension itself has no JS deps.",
+  "scripts": {
+    "build": "tailwindcss -i ./input.css -o ../css/app.css --minify",
+    "watch": "tailwindcss -i ./input.css -o ../css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.14",
+    "daisyui": "^5.0.50",
+    "tailwindcss": "^4.1.14"
+  }
+}

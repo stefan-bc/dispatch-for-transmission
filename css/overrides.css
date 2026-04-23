@@ -1,0 +1,57 @@
+/* Small, targeted tweaks on top of the compiled DaisyUI bundle.
+   Load order in HTML: app.css first, then this. Everything here is
+   either (a) popup-only layout that DaisyUI doesn't own, or
+   (b) fine-tuning the theme for a dense torrent-manager feel. */
+
+/* Expand popup body to the whole viewport when opened as a tab. */
+html[data-view="tab"] body {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+/* Scrollbars: thin, themed, don't draw attention. */
+.list::-webkit-scrollbar,
+.modal-box::-webkit-scrollbar,
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--color-base-content) 15%, transparent);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--color-base-content) 30%, transparent);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* Torrent rows. We deliberately don't use DaisyUI's .list-row grid
+   because it causes the trailing action button to drift based on name
+   length. Plain flex + our own separators gives a tidy, aligned list. */
+.list .row {
+  border-bottom: 1px solid color-mix(in oklch, var(--color-base-content) 6%, transparent);
+}
+.list .row:last-child { border-bottom: none; }
+
+/* Selection: a flat, slightly lighter background — no borders, no depth. */
+.list .row.selected,
+.list .row.selected:hover {
+  background: color-mix(in oklch, var(--color-base-content) 8%, transparent);
+}
+
+/* Monospace numerals anywhere that shows speeds / sizes. */
+.tnum, .progress { font-variant-numeric: tabular-nums; }
+
+/* Dialog backdrops: a touch darker so the popup behind doesn't peek. */
+.modal::backdrop,
+.modal .modal-backdrop { background: rgba(0, 0, 0, 0.55); }
+
+/* Inactive / paused torrents fade so active downloads stand out at a
+   glance. The badge text still differentiates the states in words. */
+.list .row[data-state="stopped"] .progress,
+.list .row[data-state="queued"] .progress,
+.list .row[data-state="metadata"] .progress { opacity: 0.4; }
+.list .row[data-state="stopped"] .row-status,
+.list .row[data-state="queued"] .row-status { opacity: 0.7; }
+

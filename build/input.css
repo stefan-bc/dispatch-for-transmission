@@ -1,0 +1,21 @@
+/* Tailwind v4 + DaisyUI v5 input.
+   Compiled to ../css/app.css via `npm run build`. */
+
+@import "tailwindcss";
+
+/* Tell Tailwind which files to scan for class names. */
+@source "../popup.html";
+@source "../options.html";
+@source "../js/**/*.js";
+
+@plugin "daisyui" {
+  themes: dracula --default, dim;
+  logs: false;
+}
+
+/* Fine-tune list rows: tight padding + monospace-numerals so speeds line
+   up. These are custom utilities used on top of DaisyUI components. */
+@layer utilities {
+  .tnum { font-variant-numeric: tabular-nums; }
+  .truncate-mid { /* reserved for future ellipsis-middle helper */ }
+}

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!-- Dev-only screenshot. 1280×800 canvas showing the Add-torrent dialog
+     over a dimmed torrent list behind it. -->
+<html lang="en" data-theme="dracula">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../css/app.css">
+  <link rel="stylesheet" href="../../css/overrides.css">
+  <style>
+    html, body { margin: 0; padding: 0; }
+    .stage {
+      width: 1280px; height: 800px;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 28px;
+      background:
+        radial-gradient(1200px 600px at 50% 0%, rgba(96, 165, 250, 0.12), transparent 60%),
+        oklch(20% 0.02 250);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+      color: #e6edf3;
+      overflow: hidden;
+    }
+    .caption { text-align: center; max-width: 620px; }
+    .caption h1 { margin: 0 0 6px; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+    .caption p { margin: 0; font-size: 14px; opacity: 0.72; line-height: 1.45; }
+    .frame {
+      position: relative;
+      width: 560px; height: 560px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.08),
+        0 30px 80px rgba(0,0,0,0.55);
+    }
+    iframe { width: 560px; height: 560px; border: 0; display: block; filter: brightness(0.55); }
+    .dialog-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Inline "add torrent" dialog — rendered statically at fixed size so
+       the screenshot is deterministic. */
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption">
+      <h1>Add by magnet, URL, or file</h1>
+      <p>Choose a server, pick a download directory, and go. Start paused if you want to inspect files first.</p>
+    </div>
+    <div class="frame">
+      <iframe src="../demo.html" scrolling="no"></iframe>
+      <div class="dialog-overlay">
+        <div class="w-80 p-0 bg-base-100 rounded-lg shadow-2xl border border-base-300">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
+            <h3 class="font-semibold text-sm">Add torrent</h3>
+            <button class="btn btn-ghost btn-xs btn-square">✕</button>
+          </div>
+          <div class="px-4 py-3 space-y-3 text-xs">
+            <fieldset class="fieldset">
+              <legend class="fieldset-legend pb-1">Server</legend>
+              <select class="select select-sm w-full"><option>Seedbox</option></select>
+            </fieldset>
+            <fieldset class="fieldset">
+              <legend class="fieldset-legend pb-1">Magnet link or torrent URL</legend>
+              <input type="text" class="input input-sm w-full" value="magnet:?xt=urn:btih:d540fc…">
+            </fieldset>
+            <fieldset class="fieldset">
+              <legend class="fieldset-legend pb-1">Download to</legend>
+              <select class="select select-sm w-full">
+                <option>Movies — /downloads/movies</option>
+              </select>
+            </fieldset>
+            <label class="label cursor-pointer justify-start gap-2 pt-1">
+              <input type="checkbox" class="checkbox checkbox-xs">
+              <span class="label-text text-xs">Start paused</span>
+            </label>
+          </div>
+          <div class="flex justify-end gap-2 px-4 py-3 border-t border-base-300">
+            <button class="btn btn-sm btn-ghost">Cancel</button>
+            <button class="btn btn-sm btn-primary">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dracula">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Transmission Remote</title>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/overrides.css">
+</head>
+<body class="grid grid-rows-[auto_1fr_auto] w-[560px] h-[560px] overflow-hidden bg-base-200 text-base-content">
+
+  <!-- Toolbar ——————————————————————————————————————————————— -->
+  <div class="navbar min-h-0 px-2 py-1.5 gap-1.5 bg-base-100 border-b border-base-300">
+    <select id="server-select" class="select select-xs select-ghost w-auto max-w-36 font-medium" aria-label="Server"></select>
+    <label class="input input-xs input-ghost flex-1 min-w-0">
+      <svg class="h-3 w-3 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="search" type="search" placeholder="Search" autocomplete="off" spellcheck="false" class="grow" aria-label="Search">
+    </label>
+    <div class="flex items-center gap-0.5 ml-auto">
+      <button id="btn-add" class="btn btn-ghost btn-xs btn-square" title="Add torrent (O)" aria-label="Add">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button id="btn-start" class="btn btn-ghost btn-xs btn-square" title="Start selected (Space)" aria-label="Start" disabled>
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>
+      </button>
+      <button id="btn-stop" class="btn btn-ghost btn-xs btn-square" title="Stop selected (Space)" aria-label="Stop" disabled>
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+      </button>
+      <button id="btn-delete" class="btn btn-ghost btn-xs btn-square hover:text-error" title="Delete selected (Del)" aria-label="Delete" disabled>
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+      <span class="w-px h-4 bg-base-300 mx-1"></span>
+      <button id="btn-settings" class="btn btn-ghost btn-xs btn-square" title="Settings" aria-label="Settings">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button id="btn-expand" class="btn btn-ghost btn-xs btn-square" title="Open in tab" aria-label="Open in tab">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3h7v7M21 3l-9 9M5 5v14h14v-7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Torrent list ——————————————————————————————————————————— -->
+  <ul id="list" class="list bg-base-200 overflow-y-auto overflow-x-hidden" tabindex="0" aria-label="Torrent list"></ul>
+
+  <!-- Empty state ——————————————————————————————————————————— -->
+  <div id="empty-state" class="row-start-2 flex flex-col items-center justify-center px-8 text-center gap-2" hidden>
+    <div class="size-10 rounded-full bg-base-300 flex items-center justify-center opacity-60">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v12m0 0-4-4m4 4 4-4M5 20h14"/></svg>
+    </div>
+    <h3 id="empty-title" class="text-sm font-semibold"></h3>
+    <p id="empty-body" class="text-xs opacity-70 max-w-[28ch]"></p>
+    <button id="empty-action" class="btn btn-sm btn-neutral mt-1" hidden></button>
+  </div>
+
+  <!-- Status bar ———————————————————————————————————————————— -->
+  <div class="flex items-center justify-between px-3 py-1.5 bg-base-100 border-t border-base-300 text-xs opacity-80 tnum gap-2">
+    <span id="status-left"></span>
+    <span id="status-middle" class="truncate"></span>
+    <span id="status-right" class="flex items-center gap-2">
+      <span class="flex items-center gap-0.5"><span class="opacity-60">↓</span><span id="rate-down">0 B/s</span></span>
+      <span class="flex items-center gap-0.5"><span class="opacity-60">↑</span><span id="rate-up">0 B/s</span></span>
+    </span>
+  </div>
+
+  <!-- ===== Dialogs ===== -->
+
+  <!-- Add torrent -->
+  <dialog id="dlg-add" class="modal">
+    <div class="modal-box w-80 max-w-[90vw] p-0">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
+        <h3 class="font-semibold text-sm">Add torrent</h3>
+        <button class="btn btn-ghost btn-xs btn-square" data-close="dlg-add" aria-label="Close">✕</button>
+      </div>
+      <form id="add-form" class="px-4 py-3 space-y-3 text-xs">
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend pb-1">Server</legend>
+          <select id="add-server" class="select select-sm w-full"></select>
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend pb-1">Magnet link or torrent URL</legend>
+          <input id="add-link" type="text" autocomplete="off" spellcheck="false" class="input input-sm w-full" placeholder="magnet:?xt=urn:btih:…">
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend pb-1">Or upload .torrent</legend>
+          <input id="add-file" type="file" accept=".torrent,application/x-bittorrent" class="file-input file-input-sm w-full">
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend pb-1">Download to</legend>
+          <select id="add-dir" class="select select-sm w-full"></select>
+        </fieldset>
+        <label class="label cursor-pointer justify-start gap-2 pt-1">
+          <input id="add-paused" type="checkbox" class="checkbox checkbox-xs">
+          <span class="label-text text-xs">Start paused</span>
+        </label>
+        <div id="add-error" class="alert alert-error alert-soft py-2 text-xs" hidden></div>
+      </form>
+      <div class="flex justify-end gap-2 px-4 py-3 border-t border-base-300">
+        <button class="btn btn-sm btn-ghost" data-close="dlg-add">Cancel</button>
+        <button id="add-submit" class="btn btn-sm btn-primary">Add</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
+
+  <!-- Delete confirm -->
+  <dialog id="dlg-delete" class="modal">
+    <div class="modal-box w-80 max-w-[90vw] p-0">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
+        <h3 class="font-semibold text-sm">Delete torrents</h3>
+        <button class="btn btn-ghost btn-xs btn-square" data-close="dlg-delete" aria-label="Close">✕</button>
+      </div>
+      <div class="px-4 py-3 space-y-2 text-xs">
+        <p class="opacity-80">These torrents will be removed:</p>
+        <ul id="delete-list" class="max-h-40 overflow-y-auto border border-base-300 rounded-md bg-base-100 p-2 space-y-0.5 opacity-80"></ul>
+        <label class="label cursor-pointer justify-start gap-2 pt-1">
+          <input id="delete-data" type="checkbox" class="checkbox checkbox-xs">
+          <span class="label-text text-xs">Also delete file data from disk</span>
+        </label>
+      </div>
+      <div class="flex justify-end gap-2 px-4 py-3 border-t border-base-300">
+        <button class="btn btn-sm btn-ghost" data-close="dlg-delete">Cancel</button>
+        <button id="delete-submit" class="btn btn-sm btn-error" autofocus>Delete</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
+
+  <!-- Settings -->
+  <dialog id="dlg-settings" class="modal">
+    <div class="modal-box w-96 max-w-[92vw] p-0">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
+        <h3 class="font-semibold text-sm">Settings</h3>
+        <button class="btn btn-ghost btn-xs btn-square" data-close="dlg-settings" aria-label="Close">✕</button>
+      </div>
+      <div class="px-4 py-3 space-y-3 text-xs max-h-[60vh] overflow-y-auto">
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend pb-1">Sort by</legend>
+          <select id="pref-order" class="select select-sm w-full">
+            <option value="dateDesc">Date — newest first</option>
+            <option value="dateAsc">Date — oldest first</option>
+            <option value="nameAsc">Name — A → Z</option>
+            <option value="nameDesc">Name — Z → A</option>
+            <option value="progress">Progress</option>
+            <option value="rateDown">Download rate</option>
+          </select>
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend pb-1">Refresh every</legend>
+          <select id="pref-refresh" class="select select-sm w-full">
+            <option value="1">1 second</option>
+            <option value="2">2 seconds</option>
+            <option value="3">3 seconds</option>
+            <option value="5">5 seconds</option>
+            <option value="10">10 seconds</option>
+            <option value="30">30 seconds</option>
+          </select>
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend pb-1">Toolbar icon opens</legend>
+          <select id="pref-mode" class="select select-sm w-full">
+            <option value="popup">Popup (compact)</option>
+            <option value="tab">New tab (full window)</option>
+          </select>
+        </fieldset>
+        <label class="label cursor-pointer justify-start gap-2">
+          <input id="pref-delete-data" type="checkbox" class="checkbox checkbox-xs">
+          <span class="label-text text-xs">Delete file data by default</span>
+        </label>
+        <label class="label cursor-pointer justify-start gap-2">
+          <input id="pref-start-on-add" type="checkbox" class="checkbox checkbox-xs">
+          <span class="label-text text-xs">Start downloading immediately when added</span>
+        </label>
+        <label class="label cursor-pointer justify-start gap-2">
+          <input id="pref-badge" type="checkbox" class="checkbox checkbox-xs">
+          <span class="label-text text-xs">Show finished-download count on the toolbar icon</span>
+        </label>
+        <div class="pt-1">
+          <a href="#" id="open-options" class="link link-hover text-xs opacity-80">Configure servers →</a>
+        </div>
+        <div class="collapse collapse-arrow border border-base-300 bg-base-100 mt-1">
+          <input type="checkbox">
+          <div class="collapse-title text-xs font-medium">Keyboard shortcuts</div>
+          <div class="collapse-content text-xs">
+            <table class="table table-xs">
+              <tbody>
+                <tr><td><kbd class="kbd kbd-xs">O</kbd></td><td>Add torrent</td></tr>
+                <tr><td><kbd class="kbd kbd-xs">Space</kbd></td><td>Start / stop selected</td></tr>
+                <tr><td><kbd class="kbd kbd-xs">Del</kbd></td><td>Delete selected</td></tr>
+                <tr><td><kbd class="kbd kbd-xs">S</kbd> / <kbd class="kbd kbd-xs">/</kbd></td><td>Focus search</td></tr>
+                <tr><td><kbd class="kbd kbd-xs">↑</kbd> <kbd class="kbd kbd-xs">↓</kbd></td><td>Navigate</td></tr>
+                <tr><td><kbd class="kbd kbd-xs">⌘/Ctrl</kbd>+<kbd class="kbd kbd-xs">A</kbd></td><td>Select all</td></tr>
+                <tr><td><kbd class="kbd kbd-xs">Enter</kbd></td><td>Open file list</td></tr>
+                <tr><td><kbd class="kbd kbd-xs">Esc</kbd></td><td>Close / clear search</td></tr>
+                <tr><td><kbd class="kbd kbd-xs">⌘/Ctrl</kbd>+<kbd class="kbd kbd-xs">Shift</kbd>+<kbd class="kbd kbd-xs">P</kbd></td><td>Open / close popup (global)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 px-4 py-3 border-t border-base-300">
+        <button class="btn btn-sm btn-ghost" data-close="dlg-settings">Cancel</button>
+        <button id="settings-submit" class="btn btn-sm btn-primary">Save</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
+
+  <!-- File manager -->
+  <dialog id="dlg-files" class="modal">
+    <div class="modal-box w-[36rem] max-w-[92vw] p-0">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-base-300 gap-3 min-w-0">
+        <div class="min-w-0">
+          <h3 id="files-title" class="font-semibold text-sm truncate">Files</h3>
+          <p id="files-dir" class="text-xs opacity-60 truncate font-mono"></p>
+        </div>
+        <button class="btn btn-ghost btn-xs btn-square shrink-0" data-close="dlg-files" aria-label="Close">✕</button>
+      </div>
+      <div id="files-tree" class="px-3 py-2 text-xs max-h-[60vh] overflow-auto bg-base-100 border-y border-base-300"></div>
+      <div class="flex justify-end gap-2 px-4 py-3">
+        <button class="btn btn-sm btn-ghost" data-close="dlg-files">Cancel</button>
+        <button id="files-submit" class="btn btn-sm btn-primary">Save</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
+
+  <!-- Toast host -->
+  <div id="toasts" class="toast toast-bottom toast-center z-50" aria-live="polite"></div>
+
+  <!-- Row template. Plain flex — deliberately NOT using DaisyUI .list-row
+       grid so the trailing action button sits in a fixed column regardless
+       of torrent name length. -->
+  <template id="row-tp">
+    <li class="row flex items-center gap-3 py-2 pl-3 pr-2 cursor-pointer select-none hover:bg-base-300/50" role="button" tabindex="0">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="row-name text-sm font-medium truncate"></span>
+          <span class="row-status badge badge-xs badge-ghost shrink-0"></span>
+        </div>
+        <progress class="progress progress-xs w-full my-1"></progress>
+        <div class="flex items-center justify-between gap-2 text-xs opacity-70 tnum">
+          <span class="row-meta truncate"></span>
+          <span class="row-rates flex items-center gap-1.5 shrink-0">
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↓</span><span class="rate-down"></span></span>
+            <span class="flex items-center gap-0.5"><span class="opacity-60">↑</span><span class="rate-up"></span></span>
+          </span>
+        </div>
+      </div>
+      <button class="row-remove btn btn-ghost btn-xs btn-square shrink-0 hover:text-error" title="Remove torrent" aria-label="Remove torrent">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V4h6v3m-7 0v13h8V7"/></svg>
+      </button>
+    </li>
+  </template>
+
+  <!-- Drag-and-drop overlay. Shown while a file is being dragged over
+       the popup; popup.js toggles [hidden]. -->
+  <div id="drop-overlay" class="fixed inset-0 z-40 bg-base-300/80 backdrop-blur-sm flex items-center justify-center pointer-events-none border-2 border-dashed border-success" hidden>
+    <div class="text-center">
+      <svg class="h-12 w-12 mx-auto text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v13"/><path d="m7 12 5 5 5-5"/><path d="M5 21h14"/>
+      </svg>
+      <div class="mt-3 font-semibold text-success">Drop .torrent to add</div>
+    </div>
+  </div>
+
+  <!-- Right-click menu for torrent rows. Positioned via inline style at
+       the cursor. Hidden by default; popup.js toggles [hidden]. -->
+  <ul id="row-menu" class="menu menu-sm bg-base-100 border border-base-300 rounded-box shadow-lg p-1 fixed z-50 w-44" hidden>
+    <li id="row-menu-start"><a data-action="start">Resume</a></li>
+    <li id="row-menu-stop"><a data-action="stop">Pause</a></li>
+    <li><a data-action="delete" class="text-error">Remove…</a></li>
+    <li><a data-action="files">Show files…</a></li>
+    <li><hr class="border-base-300 my-1"></li>
+    <li><a data-action="add">Add torrent…</a></li>
+    <li><a data-action="start-all">Start all</a></li>
+    <li><a data-action="stop-all">Stop all</a></li>
+  </ul>
+
+  <!-- Right-click menu for empty list / background area. -->
+  <ul id="list-menu" class="menu menu-sm bg-base-100 border border-base-300 rounded-box shadow-lg p-1 fixed z-50 w-44" hidden>
+    <li><a data-action="add">Add torrent…</a></li>
+    <li><a data-action="start-all">Start all</a></li>
+    <li><a data-action="stop-all">Stop all</a></li>
+  </ul>
+
+  <script type="module" src="js/popup.js"></script>
+</body>
+</html>
