@@ -108,10 +108,10 @@ remove, and manage torrents from the browser toolbar.
 
 ## Screenshots (upload these)
 
-1280 × 800 PNGs generated in `build/screenshots/`:
+PNGs in `build/screenshots/`: `00.png`, `01.png`, `02.png`, `03.png`, `04.png`.
 
-1. `01-list.png` — main torrent list populated with sample data.
-2. `02-add.png` — "Add torrent" dialog open.
-3. `03-options.png` — Server configuration page.
+Upload order on the dashboard controls display order on the listing.
+The store accepts **1280×800** or **640×400** PNG / JPEG; if the originals
+are higher-resolution they may be auto-scaled by Google's pipeline.
 
 Upload **at least one** (more is better; the max is five).
