@@ -1,4 +1,4 @@
-# Chrome Web Store listing — Remote for Transmission
+# Chrome Web Store listing — Dispatch for Transmission
 
 Paste the blocks below into the corresponding fields on the Web Store
 developer dashboard (https://chrome.google.com/webstore/devconsole).

@@ -1,4 +1,4 @@
-# Remote for Transmission
+# Dispatch for Transmission
 
 A dark-mode Chrome extension for controlling a remote Transmission daemon.
 
@@ -20,7 +20,7 @@ A dark-mode Chrome extension for controlling a remote Transmission daemon.
 In Transmission: **Preferences → Remote** → enable remote access, set a
 username/password (recommended), and note the host/port (default `9091`).
 
-In Remote for Transmission → **Add server**:
+In Dispatch for Transmission → **Add server**:
 
 - **Name** – any label you like.
 - **RPC URL** – usually `http://HOST:9091/transmission/rpc`.

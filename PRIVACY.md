@@ -1,4 +1,4 @@
-# Privacy Policy — Remote for Transmission
+# Privacy Policy — Dispatch for Transmission
 
 **Last updated:** 24 April 2026
 
@@ -7,7 +7,7 @@
 > is used nominatively to describe compatibility with the Transmission
 > BitTorrent client.
 
-Remote for Transmission is a Chrome extension that lets you control a
+Dispatch for Transmission is a Chrome extension that lets you control a
 Transmission BitTorrent daemon from your browser. This page explains, in
 plain English, what data the extension handles and where it goes.
 

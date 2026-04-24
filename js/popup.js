@@ -1,4 +1,4 @@
-// Remote for Transmission — popup.
+// Dispatch for Transmission — popup.
 // Wires the toolbar, list, dialogs and keyboard shortcuts to the RPC client.
 
 import {
