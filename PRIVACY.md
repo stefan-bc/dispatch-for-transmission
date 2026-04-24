@@ -1,13 +1,13 @@
-# Privacy Policy — Transmission Remote
+# Privacy Policy — Remote for Transmission
 
-**Last updated:** 23 April 2026
+**Last updated:** 24 April 2026
 
 > This is a third-party extension. It is not affiliated with, endorsed by,
 > or an official product of The Transmission Project. "Transmission"
 > is used nominatively to describe compatibility with the Transmission
 > BitTorrent client.
 
-Transmission Remote is a Chrome extension that lets you control a
+Remote for Transmission is a Chrome extension that lets you control a
 Transmission BitTorrent daemon from your browser. This page explains, in
 plain English, what data the extension handles and where it goes.
 

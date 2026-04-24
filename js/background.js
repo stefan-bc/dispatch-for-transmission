@@ -45,20 +45,48 @@ function addMenusForServer(server) {
 
 // --- Notifications -------------------------------------------------------
 
-function notify(title, message, isError = false) {
-  // Service workers need the full chrome-extension:// URL — relative paths
-  // fail silently with "Unable to download all specified images".
-  chrome.notifications.create({
-    type: "basic",
-    iconUrl: chrome.runtime.getURL("icon/icon.png"),
-    title,
-    message: message || "",
-    priority: isError ? 2 : 0
-  }, () => {
-    if (chrome.runtime.lastError) {
-      console.warn("notifications.create failed:", chrome.runtime.lastError.message);
-    }
+// The notifications image loader has flaky support for chrome-extension://
+// URLs from a service worker context (fails with "Unable to download all
+// specified images"). Pre-fetch the icon once and cache it as a data URL
+// — the loader always accepts those.
+let cachedIconDataUrl = null;
+async function getIconDataUrl() {
+  if (cachedIconDataUrl) return cachedIconDataUrl;
+  try {
+    const resp = await fetch(chrome.runtime.getURL("icon/icon.png"));
+    const blob = await resp.blob();
+    const buf = new Uint8Array(await blob.arrayBuffer());
+    let bin = "";
+    for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+    cachedIconDataUrl = `data:${blob.type || "image/png"};base64,${btoa(bin)}`;
+  } catch (e) {
+    console.warn("icon pre-fetch failed:", e);
+  }
+  return cachedIconDataUrl;
+}
+
+async function notify(title, message, isError = false) {
+  // Await the create() callback. Without this the SW can be torn down
+  // before Chrome actually enqueues the toast, so nothing appears.
+  const iconUrl = (await getIconDataUrl()) || chrome.runtime.getURL("icon/icon.png");
+  const level = await new Promise((resolve) => {
+    chrome.notifications.getPermissionLevel(resolve);
   });
+  const id = await new Promise((resolve) => {
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl,
+      title,
+      message: message || "",
+      priority: isError ? 2 : 0
+    }, (nid) => {
+      if (chrome.runtime.lastError) {
+        console.warn("notifications.create failed:", chrome.runtime.lastError.message);
+      }
+      resolve(nid);
+    });
+  });
+  return { id, permissionLevel: level, lastError: chrome.runtime.lastError?.message || null };
 }
 
 // --- Download a .torrent file via the active tab ------------------------
@@ -243,30 +271,58 @@ async function detectCompletions(serverId, torrents) {
   // First time we see this server: seed the map so we don't toast every
   // already-completed torrent on the first poll.
   const firstRun = Object.keys(prev).length === 0;
+  let fired = 0;
   for (const t of torrents) {
     const p = t.percentDone || 0;
     next[t.id] = p;
     if (firstRun) continue;
     const was = prev[t.id];
     if (was != null && was < 1 && p >= 1) {
-      notify("Torrent complete", t.name || "");
+      console.log(`[notify] complete: "${t.name}" (was ${was.toFixed(3)} → ${p.toFixed(3)})`);
+      await notify("Torrent complete", t.name || "");
+      fired++;
     }
   }
   all[serverId] = next;
   await chrome.storage.session.set({ [NOTIFY_STATE_KEY]: all });
+  console.log(`[notify] server=${serverId} torrents=${torrents.length} firstRun=${firstRun} fired=${fired}`);
 }
 
 chrome.alarms.create(BADGE_ALARM, { periodInMinutes: 0.5 });
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === BADGE_ALARM) updateBadge();
+// Async + await so Chrome keeps the SW alive for the full updateBadge()
+// cycle — otherwise a fire-and-forget handler risks the SW being torn down
+// mid-RPC, losing the session-state write and/or the notifications.create
+// call. Same reason for onInstalled / onStartup below.
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === BADGE_ALARM) await updateBadge();
 });
-chrome.runtime.onInstalled.addListener(() => updateBadge());
-chrome.runtime.onStartup.addListener(() => updateBadge());
+chrome.runtime.onInstalled.addListener(async () => { await updateBadge(); });
+chrome.runtime.onStartup.addListener(async () => { await updateBadge(); });
 
 // Let the popup nudge a badge refresh after its own polls for snappier UX.
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg?.type === "badge-refresh") updateBadge();
-  if (msg?.type === "notify-test") notify("Notifications enabled", "You'll get a toast like this when a torrent finishes.");
+// Returning `true` keeps the message channel (and the service worker)
+// alive until the async work completes — otherwise Chrome can tear the
+// SW down before the icon fetch + notifications.create finish firing.
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  (async () => {
+    try {
+      if (msg?.type === "badge-refresh") {
+        await updateBadge();
+        sendResponse({ ok: true });
+        return;
+      }
+      if (msg?.type === "notify-test") {
+        const info = await notify("Notifications enabled", "You'll get a toast like this when a torrent finishes.");
+        sendResponse({ ok: true, ...info });
+        return;
+      }
+      sendResponse({ ok: true });
+    } catch (e) {
+      console.warn("onMessage handler failed:", e);
+      sendResponse({ ok: false, error: e?.message || String(e) });
+    }
+  })();
+  return true;
 });
 
 updateBadge();

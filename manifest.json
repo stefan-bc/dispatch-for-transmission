@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "Transmission Remote",
+  "name": "Remote for Transmission",
   "short_name": "Transmission",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Dark-mode, high-contrast remote control for the Transmission BitTorrent daemon.",
   "minimum_chrome_version": "114",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Transmission Remote",
+    "default_title": "Remote for Transmission",
     "default_icon": { "128": "icon/icon.png" }
   },
   "icons": { "128": "icon/icon.png" },
@@ -22,7 +22,7 @@
         "default": "Ctrl+Shift+P",
         "mac": "Command+Shift+P"
       },
-      "description": "Open / close the Transmission Remote popup"
+      "description": "Open / close the Remote for Transmission popup"
     }
   },
   "permissions": [

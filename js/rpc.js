@@ -68,10 +68,16 @@ export class RpcClient {
     const sessionHeaderName = "X-Transmission-Session-Id";
     if (this.sessionId) headers.set(sessionHeaderName, this.sessionId);
 
+    // AbortController timeout — without this a blackholed host (VPN dropout,
+    // firewall drop) hangs the popup on "Loading…" indefinitely. Generous so
+    // slow-but-reachable seedboxes still work.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30000);
     const options = {
       method: "POST",
       headers,
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: controller.signal
     };
 
     let response;
@@ -87,7 +93,10 @@ export class RpcClient {
         }
       }
     } catch (err) {
+      if (err?.name === "AbortError") throw new RpcError(1, "Server did not respond in time");
       throw new RpcError(1, "Cannot connect to server");
+    } finally {
+      clearTimeout(timer);
     }
 
     if (response.status === 401) throw new RpcError(2, "Authorisation failed");

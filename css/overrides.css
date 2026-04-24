@@ -47,6 +47,14 @@ html[data-view="tab"] body {
 .modal::backdrop,
 .modal .modal-backdrop { background: rgba(0, 0, 0, 0.55); }
 
+/* Debug toggle: use the theme's info colour when the panel is open, so
+   it's visually "on" without screaming. Not red/green → safe beside the
+   success/error semantics used elsewhere. */
+#btn-debug.is-active {
+  color: var(--color-info);
+  background: color-mix(in oklch, var(--color-info) 15%, transparent);
+}
+
 /* Inactive / paused torrents fade so active downloads stand out at a
    glance. The badge text still differentiates the states in words. */
 .list .row[data-state="stopped"] .progress,

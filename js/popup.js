@@ -1,4 +1,4 @@
-// Transmission Remote popup.
+// Remote for Transmission — popup.
 // Wires the toolbar, list, dialogs and keyboard shortcuts to the RPC client.
 
 import {
@@ -42,6 +42,21 @@ const state = {
 if (new URLSearchParams(location.search).get("view") === "tab") {
   document.documentElement.dataset.view = "tab";
 }
+
+// In-popup debug log. Surfaces RPC errors, timings, and uncaught exceptions
+// without needing devtools. Rendered into #debug-log; the panel itself is
+// toggled by the bug icon in the status bar.
+const debugBuffer = [];
+function dlog(...parts) {
+  const ts = new Date().toLocaleTimeString("en-GB", { hour12: false });
+  const line = `[${ts}] ${parts.map(p => typeof p === "string" ? p : JSON.stringify(p)).join(" ")}`;
+  debugBuffer.push(line);
+  if (debugBuffer.length > 200) debugBuffer.shift();
+  const el = document.getElementById("debug-log");
+  if (el) el.textContent = debugBuffer.join("\n");
+}
+window.addEventListener("error", (e) => dlog("UNCAUGHT:", e.message, e.filename + ":" + e.lineno));
+window.addEventListener("unhandledrejection", (e) => dlog("UNHANDLED:", e.reason?.message || String(e.reason)));
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -99,6 +114,37 @@ function wireToolbar() {
     chrome.tabs.create({ url: chrome.runtime.getURL("popup.html?view=tab") });
     window.close();
   });
+  document.getElementById("btn-debug").addEventListener("click", () => {
+    const panel = document.getElementById("debug-panel");
+    panel.hidden = !panel.hidden;
+    document.getElementById("btn-debug").classList.toggle("is-active", !panel.hidden);
+    if (!panel.hidden) document.getElementById("debug-log").textContent = debugBuffer.join("\n");
+  });
+  document.getElementById("debug-close").addEventListener("click", () => {
+    document.getElementById("debug-panel").hidden = true;
+    document.getElementById("btn-debug").classList.remove("is-active");
+  });
+  document.getElementById("debug-clear").addEventListener("click", () => {
+    debugBuffer.length = 0;
+    document.getElementById("debug-log").textContent = "";
+  });
+  document.getElementById("debug-copy").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(debugBuffer.join("\n"));
+      toast("Debug log copied", "success");
+    } catch {
+      toast("Copy failed", "error");
+    }
+  });
+  document.getElementById("debug-test-notify").addEventListener("click", async () => {
+    dlog("→ notify-test");
+    try {
+      const res = await chrome.runtime.sendMessage({ type: "notify-test" });
+      dlog("← notify-test", JSON.stringify(res || {}));
+    } catch (err) {
+      dlog("✗ notify-test", err?.message || String(err));
+    }
+  });
 
   // Clicking empty list space (not on a row) deselects everything.
   document.getElementById("list").addEventListener("click", (e) => {
@@ -136,6 +182,9 @@ async function switchServer(id) {
   state.firstLoad = true;
   hydrateDownloadDirs(server);
   stopRefresh();
+  // Show a loading placeholder immediately so reopening the popup never
+  // flashes a blank content area while the first RPC call is in flight.
+  renderEmptyState({ title: "Loading…", body: `Connecting to ${server.name}.`, action: null });
   await refresh();
   startRefresh();
 }
@@ -169,11 +218,17 @@ function stopRefresh() {
 
 async function refresh() {
   if (!state.client) return;
+  const t0 = performance.now();
+  const kind = state.firstLoad ? "getTorrents" : "getRecentTorrents";
+  dlog("RPC →", kind);
   try {
     // First load: full list. Subsequent loads: recently-active only.
     const args = state.firstLoad
       ? await state.client.getTorrents()
       : await state.client.getRecentTorrents();
+    dlog("RPC ✓", kind, Math.round(performance.now() - t0) + "ms",
+      "torrents=" + (args.torrents?.length ?? 0),
+      "removed=" + (args.removed?.length ?? 0));
 
     // Upsert changed torrents.
     for (const t of args.torrents || []) {
@@ -194,17 +249,22 @@ async function refresh() {
     // Nudge the background so the toolbar badge matches the popup state.
     chrome.runtime.sendMessage({ type: "badge-refresh" }).catch(() => {});
   } catch (err) {
-    if (err instanceof RpcError) {
-      renderEmptyState({
-        title: err.code === 2 ? "Authentication failed" : "Cannot connect",
-        body: err.code === 2
-          ? "Check username and password in settings."
-          : "The Transmission daemon didn't respond. Check the server URL and ensure remote access is enabled.",
-        action: { label: "Edit server", fn: () => openServersDialog() }
-      });
-    } else {
-      toast(err.message || "Unexpected error", "error");
-    }
+    dlog("RPC ✗", kind, Math.round(performance.now() - t0) + "ms",
+      "code=" + (err?.code ?? "?"), err?.message || String(err));
+    const isAuth = err instanceof RpcError && err.code === 2;
+    const server = state.servers.find(s => s.id === state.currentServerId);
+    const url = server?.rpc ? ` (${server.rpc})` : "";
+    renderEmptyState({
+      title: isAuth ? "Authentication failed" : "Cannot connect",
+      body: isAuth
+        ? "Check username and password in settings."
+        : (err?.message
+            ? `${err.message}${url}`
+            : `The Transmission daemon didn't respond${url}.`),
+      action: isAuth
+        ? { label: "Edit server", fn: () => openServersDialog() }
+        : { label: "Retry", fn: () => { state.firstLoad = true; refresh().then(() => startRefresh()); } }
+    });
     stopRefresh();
   }
 }
@@ -508,8 +568,8 @@ function wireRowMenu() {
     else if (action === "stop-all") bulkActionAll("stop");
     else if (action === "edit-servers") openServersDialog();
     else if (action === "copy-magnet") {
-      const id = state.selection.values().next().value;
-      if (id != null) copyMagnet(id);
+      const ids = Array.from(state.selection);
+      if (ids.length > 0) copyMagnets(ids);
     }
     else if (action === "paste") pasteFromClipboard();
   });
@@ -893,13 +953,20 @@ async function pasteFromClipboard() {
   refresh();
 }
 
-async function copyMagnet(id) {
+async function copyMagnets(ids) {
   try {
-    const data = await state.client.getTorrents([id], ["magnetLink", "name"]);
-    const t = data.torrents?.[0];
-    if (!t?.magnetLink) { toast("No magnet link for this torrent", "error"); return; }
-    await navigator.clipboard.writeText(t.magnetLink);
-    toast(`Copied magnet for "${t.name}"`, "success");
+    const data = await state.client.getTorrents(ids, ["magnetLink", "name"]);
+    const links = (data.torrents || [])
+      .map(t => t.magnetLink)
+      .filter(Boolean);
+    if (links.length === 0) { toast("No magnet links available", "error"); return; }
+    await navigator.clipboard.writeText(links.join("\n"));
+    toast(
+      links.length === 1
+        ? `Copied magnet for "${data.torrents[0].name}"`
+        : `Copied ${links.length} magnet links`,
+      "success"
+    );
   } catch (err) {
     toast(err.message || "Copy failed", "error");
   }
@@ -978,12 +1045,6 @@ function wireDialogs() {
   document.getElementById("delete-submit").addEventListener("click", submitDelete);
   document.getElementById("settings-submit").addEventListener("click", submitSettings);
   document.getElementById("files-submit").addEventListener("click", submitFiles);
-  document.getElementById("open-options").addEventListener("click", (e) => {
-    e.preventDefault();
-    // Close the settings dialog first so the servers dialog opens cleanly.
-    document.getElementById("dlg-settings").close();
-    openServersDialog();
-  });
   document.getElementById("empty-action").addEventListener("click", () => {});
 }
 
