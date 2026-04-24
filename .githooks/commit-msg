@@ -1,0 +1,9 @@
+#!/bin/sh
+# Reject commit messages that mention Claude, Anthropic, or AI co-authors.
+# Bypass (only if you really mean it) with: git commit --no-verify
+MSG_FILE="$1"
+if grep -Eqi 'claude|anthropic|co-authored-by:.*(ai|assistant|bot)' "$MSG_FILE"; then
+  echo "commit-msg: blocked — message mentions Claude / Anthropic / AI attribution." >&2
+  echo "Edit the message to remove it." >&2
+  exit 1
+fi
