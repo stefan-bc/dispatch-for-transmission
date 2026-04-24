@@ -143,6 +143,22 @@
 
   <div id="toasts" class="toast toast-bottom toast-center z-50" aria-live="polite"></div>
 
+  <!-- Generic confirm dialog (used for "Delete server" etc.) -->
+  <dialog id="dlg-confirm" class="modal">
+    <div class="modal-box w-80 max-w-[90vw] p-0">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
+        <h3 id="confirm-title" class="font-semibold text-sm">Confirm</h3>
+        <button class="btn btn-ghost btn-xs btn-square" data-close="dlg-confirm" aria-label="Close">✕</button>
+      </div>
+      <p id="confirm-body" class="px-4 py-3 text-sm"></p>
+      <div class="flex justify-end gap-2 px-4 py-3 border-t border-base-300">
+        <button class="btn btn-sm btn-ghost" data-close="dlg-confirm">Cancel</button>
+        <button id="confirm-ok" class="btn btn-sm btn-error" autofocus>OK</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
+
   <script type="module" src="js/options.js"></script>
 </body>
 </html>

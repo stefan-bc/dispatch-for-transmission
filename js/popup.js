@@ -484,18 +484,46 @@ function updateStatusBar() {
   // small donation link so the space isn't wasted.
   const mid = document.getElementById("status-middle");
   if (state.selection.size > 0) {
+    mid.replaceChildren();
     mid.textContent = `${state.selection.size} selected`;
   } else {
-    // Line-drawn coffee mug, matches the rest of the toolbar glyphs.
-    mid.innerHTML = '<a href="https://buymeacoffee.com/stefanvca" target="_blank" rel="noopener" class="link link-hover opacity-70 inline-flex items-center" title="Buy me a coffee" aria-label="Buy me a coffee">'
-      + '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-      + '<path d="M17 8h1a4 4 0 0 1 0 8h-1"/>'
-      + '<path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/>'
-      + '<line x1="6" y1="2" x2="6" y2="4"/>'
-      + '<line x1="10" y1="2" x2="10" y2="4"/>'
-      + '<line x1="14" y1="2" x2="14" y2="4"/>'
-      + '</svg></a>';
+    mid.replaceChildren(buildCoffeeLink());
   }
+}
+
+// Line-drawn coffee mug, matches the rest of the toolbar glyphs.
+function buildCoffeeLink() {
+  const a = document.createElement("a");
+  a.href = "https://buymeacoffee.com/stefanvca";
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.className = "link link-hover opacity-70 inline-flex items-center";
+  a.title = "Buy me a coffee";
+  a.setAttribute("aria-label", "Buy me a coffee");
+  const svgNs = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNs, "svg");
+  svg.setAttribute("class", "h-3.5 w-3.5");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  for (const d of ["M17 8h1a4 4 0 0 1 0 8h-1", "M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"]) {
+    const p = document.createElementNS(svgNs, "path");
+    p.setAttribute("d", d);
+    svg.append(p);
+  }
+  for (const x of [6, 10, 14]) {
+    const line = document.createElementNS(svgNs, "line");
+    line.setAttribute("x1", String(x));
+    line.setAttribute("y1", "2");
+    line.setAttribute("x2", String(x));
+    line.setAttribute("y2", "4");
+    svg.append(line);
+  }
+  a.append(svg);
+  return a;
 }
 
 // --- Selection ----------------------------------------------------------
@@ -728,7 +756,7 @@ function originFrom(url) {
 }
 
 async function confirmDeleteServer(server) {
-  if (!confirm(`Delete server "${server.name}"?`)) return;
+  if (!await confirmDialog(`Delete server "${server.name}"?`, "Delete")) return;
   await deleteServer(server.id);
   state.servers = await loadServers();
   renderServerList();
@@ -1431,6 +1459,29 @@ function formatEta(seconds) {
   if (h > 0) return `${h}h ${m}m`;
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
+}
+
+// --- Confirm dialog -----------------------------------------------------
+// Promise-based wrapper around #dlg-confirm so callers can `await` a
+// yes/no answer instead of using the native blocking confirm(), which
+// behaves oddly inside an extension popup on some platforms.
+function confirmDialog(message, okLabel = "OK") {
+  return new Promise((resolve) => {
+    const dlg = document.getElementById("dlg-confirm");
+    const ok = document.getElementById("confirm-ok");
+    document.getElementById("confirm-body").textContent = message;
+    ok.textContent = okLabel;
+    let decided = false;
+    const onOk = () => { decided = true; cleanup(); dlg.close(); resolve(true); };
+    const onClose = () => { if (!decided) { cleanup(); resolve(false); } };
+    const cleanup = () => {
+      ok.removeEventListener("click", onOk);
+      dlg.removeEventListener("close", onClose);
+    };
+    ok.addEventListener("click", onOk);
+    dlg.addEventListener("close", onClose);
+    dlg.showModal();
+  });
 }
 
 // --- Toast --------------------------------------------------------------

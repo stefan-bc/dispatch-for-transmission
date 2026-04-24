@@ -216,7 +216,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 // nudged by the popup after each normal refresh so it stays responsive.
 
 const BADGE_ALARM = "badge-poll";
-const BADGE_BG = "#22c55e";      // DaisyUI success green — high contrast on black theme
+const BADGE_BG = "#22c55e";      // DaisyUI success green — high contrast on the dark theme
 const BADGE_FG = "#000000";      // pure black — readable on the green badge
 
 // Keys for per-server completion state so we can diff across polls even
@@ -271,21 +271,17 @@ async function detectCompletions(serverId, torrents) {
   // First time we see this server: seed the map so we don't toast every
   // already-completed torrent on the first poll.
   const firstRun = Object.keys(prev).length === 0;
-  let fired = 0;
   for (const t of torrents) {
     const p = t.percentDone || 0;
     next[t.id] = p;
     if (firstRun) continue;
     const was = prev[t.id];
     if (was != null && was < 1 && p >= 1) {
-      console.log(`[notify] complete: "${t.name}" (was ${was.toFixed(3)} → ${p.toFixed(3)})`);
       await notify("Torrent complete", t.name || "");
-      fired++;
     }
   }
   all[serverId] = next;
   await chrome.storage.session.set({ [NOTIFY_STATE_KEY]: all });
-  console.log(`[notify] server=${serverId} torrents=${torrents.length} firstRun=${firstRun} fired=${fired}`);
 }
 
 chrome.alarms.create(BADGE_ALARM, { periodInMinutes: 0.5 });

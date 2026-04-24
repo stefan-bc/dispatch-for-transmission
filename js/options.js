@@ -92,10 +92,31 @@ function originFrom(url) {
 }
 
 async function confirmDelete(server) {
-  if (!confirm(`Delete server "${server.name}"?`)) return;
+  if (!await confirmDialog(`Delete server "${server.name}"?`, "Delete")) return;
   await deleteServer(server.id);
   ui.servers = await loadServers();
   renderServers();
+}
+
+// Promise-based wrapper around #dlg-confirm so delete flows can await a
+// yes/no answer with consistent DaisyUI styling.
+function confirmDialog(message, okLabel = "OK") {
+  return new Promise((resolve) => {
+    const dlg = document.getElementById("dlg-confirm");
+    const ok = document.getElementById("confirm-ok");
+    document.getElementById("confirm-body").textContent = message;
+    ok.textContent = okLabel;
+    let decided = false;
+    const onOk = () => { decided = true; cleanup(); dlg.close(); resolve(true); };
+    const onClose = () => { if (!decided) { cleanup(); resolve(false); } };
+    const cleanup = () => {
+      ok.removeEventListener("click", onOk);
+      dlg.removeEventListener("close", onClose);
+    };
+    ok.addEventListener("click", onOk);
+    dlg.addEventListener("close", onClose);
+    dlg.showModal();
+  });
 }
 
 // --- Editor dialog ------------------------------------------------------

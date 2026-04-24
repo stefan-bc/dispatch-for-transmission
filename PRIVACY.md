@@ -63,6 +63,8 @@ solely for the purpose listed:
 | `scripting` | Fetch `.torrent` files from the current page using your existing site cookies when you right-click a link. |
 | `activeTab` | Access the current tab only when you right-click, to forward the link/URL. |
 | `alarms` | Run a short background poll (once every 30 seconds) so the toolbar-icon badge stays current when the popup is closed. |
+| `clipboardRead` | Read magnet / torrent URLs from the clipboard when you press Cmd/Ctrl+V in the popup or choose "Paste link" from the right-click menu. |
+| `clipboardWrite` | Copy magnet link(s) for selected torrents to the clipboard, and copy the debug log for troubleshooting. |
 | `optional_host_permissions: http(s)://*/*` | Contact the RPC endpoint(s) you configure. Requested **only** for the host you add, and only at the moment you click "Test connection" or "Save" in settings. |
 
 The extension does **not** request broad host permissions up-front — it

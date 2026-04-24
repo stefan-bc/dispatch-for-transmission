@@ -78,6 +78,8 @@ Paste one-liners into the dashboard's "justification" fields.
 | `scripting` | Needed by the right-click handler to fetch the target `.torrent` file from the current page context (so site cookies / auth cookies apply) before forwarding its bytes to Transmission. |
 | `activeTab` | Access the current tab only at the moment of a user click on the context-menu entry, to read the link the user right-clicked. |
 | `alarms` | Background poll (once every 30 seconds) so the toolbar-icon badge stays up to date when the popup is closed. |
+| `clipboardRead` | Paste-to-add: when the user presses Cmd/Ctrl+V in the popup (or picks "Paste link" from the right-click menu), read magnet or torrent URLs from the clipboard and send them to Transmission. |
+| `clipboardWrite` | Copy magnet link(s) for the selected torrent(s) to the clipboard, and copy the in-popup debug log for troubleshooting. |
 | `optional_host_permissions` (`http://*/*`, `https://*/*`) | Make JSON-RPC calls to the exact Transmission server URL the user configures. Requested at runtime, per-host, only after the user clicks "Test connection" or "Save" — the extension is never granted the full web up-front. |
 
 ## Single purpose statement
