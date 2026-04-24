@@ -9,11 +9,12 @@ import zlib
 
 SIZE = 128
 
-# DaisyUI "black" theme palette — pure black with a cool cyan accent for
-# the download glyph so the icon stays legible at toolbar sizes.
-BG       = (0, 0, 0, 255)       # #000000 background
-HIGHLIGHT = (38, 38, 38, 255)   # #262626 subtle top inner edge
-ACCENT   = (139, 233, 253, 255) # #8be9fd cyan glyph
+# Dark-grey background (not pure black) so the icon reads softer in the
+# toolbar; glyph in a matching light grey so it stays quiet.
+BG        = (31, 31, 31, 255)    # #1f1f1f dark-grey background
+HIGHLIGHT = (60, 60, 60, 255)    # #3c3c3c subtle top inner edge
+ARROW     = (212, 212, 212, 255) # #d4d4d4 light-grey download arrow
+TRAY      = (212, 212, 212, 255) # #d4d4d4 light-grey bar (matches arrow)
 TRANSPARENT = (0, 0, 0, 0)
 
 # Glyph geometry.
@@ -57,24 +58,24 @@ def in_triangle(px, py, x1, y1, x2, y2, x3, y3):
 def in_bg(px, py):
     return in_rounded_rect(px, py, CX, CX, SIZE, SIZE, CORNER_RADIUS)
 
-def in_glyph(px, py):
-    # Shaft.
+def in_arrow(px, py):
+    # Shaft + downward-pointing triangle — the "download" part of the glyph.
     if abs(px - CX) <= SHAFT_W / 2 and SHAFT_TOP <= py <= SHAFT_BOTTOM:
         return True
-    # Arrowhead (downward-pointing triangle).
     if in_triangle(px, py,
                    CX - HEAD_HALF_W, HEAD_TOP_Y,
                    CX + HEAD_HALF_W, HEAD_TOP_Y,
                    CX, HEAD_TIP_Y):
         return True
-    # Tray bar under the arrow.
+    return False
+
+def in_tray(px, py):
+    # Horizontal bar the arrow points into.
     tcx = (TRAY_X1 + TRAY_X2) / 2
     tcy = (TRAY_Y1 + TRAY_Y2) / 2
     tw  = TRAY_X2 - TRAY_X1
     th  = TRAY_Y2 - TRAY_Y1
-    if in_rounded_rect(px, py, tcx, tcy, tw, th, TRAY_RADIUS):
-        return True
-    return False
+    return in_rounded_rect(px, py, tcx, tcy, tw, th, TRAY_RADIUS)
 
 def coverage(fn, x, y):
     # 4x super-sampling for smooth anti-aliased edges.
@@ -103,10 +104,13 @@ def make_pixels():
                 t = max(0, (8 - y) / 8) * 0.35
                 colour = blend(colour, HIGHLIGHT, t)
 
-            # Composite glyph on top using its coverage.
-            fga = coverage(in_glyph, x, y)
-            if fga > 0:
-                colour = blend(colour, ACCENT, fga)
+            # Composite arrow (grey) then tray (green) on top.
+            arr = coverage(in_arrow, x, y)
+            if arr > 0:
+                colour = blend(colour, ARROW, arr)
+            tr = coverage(in_tray, x, y)
+            if tr > 0:
+                colour = blend(colour, TRAY, tr)
 
             # Apply bg coverage to the pixel's alpha for rounded-corner AA.
             final = (colour[0], colour[1], colour[2], int(round(colour[3] * bga)))

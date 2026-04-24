@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="black">
+<html lang="en" data-theme="business">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -11,7 +11,7 @@
 
   <!-- Toolbar ——————————————————————————————————————————————— -->
   <div class="navbar min-h-0 px-2 py-1.5 gap-1.5 bg-base-100 border-b border-base-300">
-    <select id="server-select" class="select select-xs select-ghost w-auto max-w-36 font-medium" aria-label="Server"></select>
+    <select id="server-select" class="select select-xs select-ghost w-auto max-w-36 pr-8 font-medium" aria-label="Server"></select>
     <label class="input input-xs input-ghost flex-1 min-w-0">
       <svg class="h-3 w-3 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="search" type="search" placeholder="Search" autocomplete="off" spellcheck="false" class="grow" aria-label="Search">
@@ -371,10 +371,12 @@
     <li id="row-menu-stop"><a data-action="stop">Pause</a></li>
     <li><a data-action="delete" class="text-error">Remove…</a></li>
     <li><a data-action="files">Show files…</a></li>
+    <li><a data-action="copy-magnet">Copy magnet link</a></li>
     <li><hr class="border-base-300 my-1"></li>
     <li><a data-action="start-all">Start all</a></li>
     <li><a data-action="stop-all">Stop all</a></li>
     <li><a data-action="add">Add torrent…</a></li>
+    <li><a data-action="paste">Paste link</a></li>
     <li><a data-action="edit-servers">Edit servers…</a></li>
   </ul>
 
@@ -383,6 +385,7 @@
     <li><a data-action="start-all">Start all</a></li>
     <li><a data-action="stop-all">Stop all</a></li>
     <li><a data-action="add">Add torrent…</a></li>
+    <li><a data-action="paste">Paste link</a></li>
     <li><a data-action="edit-servers">Edit servers…</a></li>
   </ul>
 

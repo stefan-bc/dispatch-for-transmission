@@ -31,7 +31,9 @@
     "notifications",
     "scripting",
     "activeTab",
-    "alarms"
+    "alarms",
+    "clipboardRead",
+    "clipboardWrite"
   ],
   "optional_host_permissions": ["https://*/*", "http://*/*"]
 }

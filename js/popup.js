@@ -54,6 +54,7 @@ async function init() {
   wireShortcuts();
   wireRowMenu();
   wireDragDrop();
+  wirePasteAdd();
   wireServers();
   hydrateServerSelects();
 
@@ -506,6 +507,11 @@ function wireRowMenu() {
     else if (action === "start-all") bulkActionAll("start");
     else if (action === "stop-all") bulkActionAll("stop");
     else if (action === "edit-servers") openServersDialog();
+    else if (action === "copy-magnet") {
+      const id = state.selection.values().next().value;
+      if (id != null) copyMagnet(id);
+    }
+    else if (action === "paste") pasteFromClipboard();
   });
 
   // List-menu clicks (empty area / background).
@@ -518,6 +524,7 @@ function wireRowMenu() {
     else if (action === "start-all") bulkActionAll("start");
     else if (action === "stop-all") bulkActionAll("stop");
     else if (action === "edit-servers") openServersDialog();
+    else if (action === "paste") pasteFromClipboard();
   });
 
   // Intercept right-click anywhere in the popup: if not on a row, show
@@ -825,6 +832,87 @@ async function addTorrentFromDrop(file) {
     const metainfo = await readFileAsBase64(file);
     const paused = state.prefs.startOnAdd === false;
     const result = await state.client.addTorrent({ metainfo, paused });
+    const added = result["torrent-added"];
+    const dup = result["torrent-duplicate"];
+    if (added) toast(`Added: ${added.name}`, "success");
+    else if (dup) toast(`Duplicate: ${dup.name}`, "error");
+  } catch (err) {
+    toast(err.message || "Failed to add torrent", "error");
+  }
+}
+
+// --- Paste-to-add magnet / torrent URL ---------------------------------
+// A plain document-level `paste` listener doesn't reliably fire in a Chrome
+// extension popup when no input is focused. Instead, intercept Cmd/Ctrl+V
+// via keydown and read the clipboard via navigator.clipboard.readText()
+// — the keypress counts as a user gesture, so no permission is needed.
+
+function wirePasteAdd() {
+  document.addEventListener("keydown", async (e) => {
+    if (!(e.key === "v" || e.key === "V")) return;
+    if (!(e.metaKey || e.ctrlKey)) return;
+    // Leave input fields, selects, and open dialogs alone — user may be
+    // doing a normal paste.
+    const inField = e.target.closest?.("input, textarea, select, [contenteditable]");
+    const anyDialogOpen = document.querySelector("dialog[open]");
+    if (inField || anyDialogOpen) return;
+
+    let text = "";
+    try { text = (await navigator.clipboard.readText()) || ""; }
+    catch { return; } // clipboard read blocked → silent no-op
+    text = text.trim();
+    if (!text) return;
+
+    const links = extractTorrentLinks(text);
+    if (links.length === 0) return;
+
+    e.preventDefault();
+    for (const link of links) await addTorrentFromLink(link);
+    refresh();
+  });
+}
+
+// Any magnet URI or http(s) URL — let Transmission decide whether it's a
+// real torrent, that's more forgiving than a strict ".torrent" suffix.
+function extractTorrentLinks(text) {
+  return text.split(/\s+/)
+    .map(s => s.trim())
+    .filter(s => s.startsWith("magnet:") || /^https?:\/\//i.test(s));
+}
+
+async function pasteFromClipboard() {
+  let text = "";
+  try { text = (await navigator.clipboard.readText()) || ""; }
+  catch { toast("Clipboard not readable", "error"); return; }
+  const links = extractTorrentLinks(text.trim());
+  if (links.length === 0) {
+    toast("No magnet or URL in clipboard", "error");
+    return;
+  }
+  for (const link of links) await addTorrentFromLink(link);
+  refresh();
+}
+
+async function copyMagnet(id) {
+  try {
+    const data = await state.client.getTorrents([id], ["magnetLink", "name"]);
+    const t = data.torrents?.[0];
+    if (!t?.magnetLink) { toast("No magnet link for this torrent", "error"); return; }
+    await navigator.clipboard.writeText(t.magnetLink);
+    toast(`Copied magnet for "${t.name}"`, "success");
+  } catch (err) {
+    toast(err.message || "Copy failed", "error");
+  }
+}
+
+async function addTorrentFromLink(url) {
+  if (!state.client) {
+    toast("No server selected", "error");
+    return;
+  }
+  try {
+    const paused = state.prefs.startOnAdd === false;
+    const result = await state.client.addTorrent({ url, paused });
     const added = result["torrent-added"];
     const dup = result["torrent-duplicate"];
     if (added) toast(`Added: ${added.name}`, "success");

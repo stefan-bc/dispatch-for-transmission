@@ -9,7 +9,7 @@
 @source "../js/**/*.js";
 
 @plugin "daisyui" {
-  themes: black --default;
+  themes: business --default;
   logs: false;
 }
 
