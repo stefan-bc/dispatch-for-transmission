@@ -66,7 +66,7 @@ last-used server. Toggle it off in the settings dialog.
 
 ## Notes
 
-- Dracula dark theme via DaisyUI v5. The extension is MV3 and uses
+- Dark theme via DaisyUI v5 (the "business" preset). The extension is MV3 and uses
   `optional_host_permissions`, so Chrome only asks for access to servers
   you actually add.
 - Passwords are stored in `chrome.storage.local` (not synced).

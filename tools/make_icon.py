@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Generates a 128x128 PNG icon using only stdlib (zlib + struct).
-# Design: rounded-square Dracula-dark background with a clean
+# Design: rounded-square dark background with a clean
 # download-to-tray glyph (shaft + arrowhead + horizontal bar).
 
 import os

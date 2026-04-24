@@ -26,7 +26,7 @@ or an official product of The Transmission Project. The name
 "Transmission" describes compatibility only.
 
 WHY THIS EXTENSION
-• Dark, restrained Dracula interface designed for density, not decoration.
+• Dark, restrained interface designed for density, not decoration.
 • Add torrents by magnet link, .torrent URL, file upload, or drag-and-drop.
 • Start, pause, remove, and bulk-action your torrents with a click,
   a keyboard shortcut, or the right-click menu.
