@@ -46,12 +46,18 @@ function addMenusForServer(server) {
 // --- Notifications -------------------------------------------------------
 
 function notify(title, message, isError = false) {
+  // Service workers need the full chrome-extension:// URL — relative paths
+  // fail silently with "Unable to download all specified images".
   chrome.notifications.create({
     type: "basic",
-    iconUrl: "icon/icon.png",
+    iconUrl: chrome.runtime.getURL("icon/icon.png"),
     title,
     message: message || "",
     priority: isError ? 2 : 0
+  }, () => {
+    if (chrome.runtime.lastError) {
+      console.warn("notifications.create failed:", chrome.runtime.lastError.message);
+    }
   });
 }
 
@@ -185,13 +191,13 @@ const BADGE_ALARM = "badge-poll";
 const BADGE_BG = "#22c55e";      // DaisyUI success green — high contrast on black theme
 const BADGE_FG = "#000000";      // pure black — readable on the green badge
 
+// Keys for per-server completion state so we can diff across polls even
+// after the service worker is torn down and restarted.
+const NOTIFY_STATE_KEY = "notify.progress"; // in chrome.storage.session
+
 async function updateBadge() {
   try {
     const prefs = await loadPreferences();
-    if (prefs.badgeEnabled === false) {
-      await chrome.action.setBadgeText({ text: "" });
-      return;
-    }
     const servers = await loadServers();
     if (servers.length === 0) {
       await chrome.action.setBadgeText({ text: "" });
@@ -201,23 +207,53 @@ async function updateBadge() {
     const stored = await chrome.storage.local.get(STORAGE.lastServer);
     const server = servers.find(s => s.id === stored[STORAGE.lastServer]) || servers[0];
     const client = new RpcClient(server);
-    const { torrents } = await client.getTorrents(null, ["percentDone"]);
-    // Count finished torrents (100% downloaded), regardless of whether
-    // they're now seeding or stopped.
-    const done = torrents.filter(t => (t.percentDone || 0) >= 1).length;
-    if (done === 0) {
+    const { torrents } = await client.getTorrents(null, ["id", "name", "percentDone"]);
+
+    // Badge: count fully-finished torrents for the active server.
+    if (prefs.badgeEnabled === false) {
       await chrome.action.setBadgeText({ text: "" });
     } else {
-      await chrome.action.setBadgeText({ text: String(done) });
-      await chrome.action.setBadgeBackgroundColor({ color: BADGE_BG });
-      if (chrome.action.setBadgeTextColor) {
-        await chrome.action.setBadgeTextColor({ color: BADGE_FG });
+      const done = torrents.filter(t => (t.percentDone || 0) >= 1).length;
+      if (done === 0) {
+        await chrome.action.setBadgeText({ text: "" });
+      } else {
+        await chrome.action.setBadgeText({ text: String(done) });
+        await chrome.action.setBadgeBackgroundColor({ color: BADGE_BG });
+        if (chrome.action.setBadgeTextColor) {
+          await chrome.action.setBadgeTextColor({ color: BADGE_FG });
+        }
       }
+    }
+
+    // Notifications: fire once per torrent that just crossed 100%.
+    if (prefs.notifyOnComplete === true) {
+      await detectCompletions(server.id, torrents);
     }
   } catch {
     // Swallow transient errors — a server that's momentarily down shouldn't
     // throw up UI. The next tick will retry.
   }
+}
+
+async function detectCompletions(serverId, torrents) {
+  const store = await chrome.storage.session.get(NOTIFY_STATE_KEY);
+  const all = store[NOTIFY_STATE_KEY] || {};
+  const prev = all[serverId] || {};
+  const next = {};
+  // First time we see this server: seed the map so we don't toast every
+  // already-completed torrent on the first poll.
+  const firstRun = Object.keys(prev).length === 0;
+  for (const t of torrents) {
+    const p = t.percentDone || 0;
+    next[t.id] = p;
+    if (firstRun) continue;
+    const was = prev[t.id];
+    if (was != null && was < 1 && p >= 1) {
+      notify("Torrent complete", t.name || "");
+    }
+  }
+  all[serverId] = next;
+  await chrome.storage.session.set({ [NOTIFY_STATE_KEY]: all });
 }
 
 chrome.alarms.create(BADGE_ALARM, { periodInMinutes: 0.5 });
@@ -230,6 +266,7 @@ chrome.runtime.onStartup.addListener(() => updateBadge());
 // Let the popup nudge a badge refresh after its own polls for snappier UX.
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg?.type === "badge-refresh") updateBadge();
+  if (msg?.type === "notify-test") notify("Notifications enabled", "You'll get a toast like this when a torrent finishes.");
 });
 
 updateBadge();

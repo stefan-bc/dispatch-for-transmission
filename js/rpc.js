@@ -213,7 +213,8 @@ const PREF_DEFAULTS = Object.freeze({
   actionMode: "popup",
   deleteDataByDefault: false,
   startOnAdd: true,
-  badgeEnabled: true
+  badgeEnabled: true,
+  notifyOnComplete: false
 });
 
 export async function loadPreferences() {

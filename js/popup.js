@@ -1096,17 +1096,20 @@ function openSettingsDialog() {
   document.getElementById("pref-delete-data").checked = state.prefs.deleteDataByDefault;
   document.getElementById("pref-start-on-add").checked = state.prefs.startOnAdd !== false;
   document.getElementById("pref-badge").checked = state.prefs.badgeEnabled !== false;
+  document.getElementById("pref-notify").checked = state.prefs.notifyOnComplete === true;
   document.getElementById("dlg-settings").showModal();
 }
 
 async function submitSettings() {
+  const prevNotify = state.prefs.notifyOnComplete === true;
   state.prefs = {
     order: document.getElementById("pref-order").value,
     refreshSeconds: parseInt(document.getElementById("pref-refresh").value, 10),
     actionMode: document.getElementById("pref-mode").value,
     deleteDataByDefault: document.getElementById("pref-delete-data").checked,
     startOnAdd: document.getElementById("pref-start-on-add").checked,
-    badgeEnabled: document.getElementById("pref-badge").checked
+    badgeEnabled: document.getElementById("pref-badge").checked,
+    notifyOnComplete: document.getElementById("pref-notify").checked
   };
   await savePreferences(state.prefs);
   document.getElementById("dlg-settings").close();
@@ -1114,6 +1117,11 @@ async function submitSettings() {
   renderList();
   // Ask the background to apply the new badge preference immediately.
   chrome.runtime.sendMessage({ type: "badge-refresh" }).catch(() => {});
+  // Fire a one-shot test notification on the off→on transition so the
+  // user can confirm OS-level permissions are granted.
+  if (!prevNotify && state.prefs.notifyOnComplete === true) {
+    chrome.runtime.sendMessage({ type: "notify-test" }).catch(() => {});
+  }
 }
 
 // --- Files dialog -------------------------------------------------------
