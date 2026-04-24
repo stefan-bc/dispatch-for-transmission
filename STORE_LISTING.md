@@ -99,9 +99,9 @@ remove, and manage torrents from the browser toolbar.
 - **Homepage URL** — your GitHub (or GitLab) repo URL.
 - **Support URL** — repository issues page.
 - **Privacy policy URL** — a public URL that serves `PRIVACY.md` (e.g.
-  GitHub Pages: `https://stefan-bc.github.io/transmission-remote/privacy.html`
+  GitHub Pages: `https://stefan-bc.github.io/dispatch-for-transmission/privacy.html`
   or the raw markdown
-  `https://github.com/stefan-bc/transmission-remote/blob/main/PRIVACY.md`).
+  `https://github.com/stefan-bc/dispatch-for-transmission/blob/main/PRIVACY.md`).
   The URL **must** be publicly reachable when you submit.
 
 ## Screenshots (upload these)
@@ -110,11 +110,6 @@ remove, and manage torrents from the browser toolbar.
 
 1. `01-list.png` — main torrent list populated with sample data.
 2. `02-add.png` — "Add torrent" dialog open.
-3. `03-settings.png` — Settings dialog.
-4. `04-options.png` — Server configuration page.
+3. `03-options.png` — Server configuration page.
 
 Upload **at least one** (more is better; the max is five).
-
-## Small promo tile (optional, 440 × 280)
-
-Use `build/screenshots/promo-440x280.png`.
